@@ -1,26 +1,43 @@
-pipeline {
-agent any
-    tools {
-        maven 'MAVEN_PATH'
-        jdk 'jdk8'
+node {
+    def mvnHome = tool name: 'M3', type: 'maven'
+    def mvnCli = "${mvnHome}/bin/mvn"
+	   
+    properties([
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')),
+        disableConcurrentBuilds(),
+        [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/GokulVaradharajan/petclinic.git'],
+        [$class: 'ThrottleJobProperty', categories: [], limitOneJobWithMatchingParams: false, maxConcurrentPerNode: 0, maxConcurrentTotal: 0, paramsToUseForLimit: '', throttleEnabled: true, throttleOption: 'project'],
+        pipelineTriggers([githubPush()]),
+        parameters([string(defaultValue: 'DEV', description: 'env name', name: 'environment', trim: false)])
+    ])
+    stage('Checkout SCM'){
+        git branch: 'master', credentialsId: 'github-creds', url: 'https://github.com/GokulVaradharajan/petclinic.git'
     }
-    stages {
-        stage("Tools initialization") {
-            steps {
-                sh "mvn --version"
-                sh "java -version"
-            }
+    stage('Read praram'){
+        echo "The environment chosen during the Job execution is ${params.environment}"
+        echo "$JENKINS_URL"
+    }
+    stage('maven compile'){
+        // def mvnHome = tool name: 'M3', type: 'maven'
+        // def mvnCli = "${mvnHome}/bin/mvn"
+        sh "${mvnCli} clean compile"
+    }
+    stage('maven package'){
+        sh "${mvnCli} package -Dmaven.test.skip=true"
+    }
+    stage('Archive atifacts'){
+        archiveArtifacts artifacts: '**/*.war', onlyIfSuccessful: true
+    }
+    stage('Archive Test Results'){
+        junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+    }
+    stage('Deploy To Tomcat'){
+        sshagent(['app-server']) {
+            sh 'scp -o StrictHostKeyChecking=no target/*.war 127.0.0.1:8084:/opt/apache-tomcat-8.5.38/webapps/'
         }
-        stage("Checkout Code") {
-            steps {
-                git branch: 'master',
-                url: "https://github.com/GokulVaradharajan/petclinic.git"
-            }
-        }
-        stage("Building Application") {
-            steps {
-               sh "mvn clean package"
-            }
-        }
+    }
+    stage('Smoke Test'){
+        sleep 5
+        sh "curl ec2-52-70-39-48.compute-1.amazonaws.com:8080/petclinic"
     }
 }
