@@ -10,7 +10,7 @@ pipeline
         stage('Build'){
             steps{
                 git 'https://github.com/GokulVaradharajan/petclinic.git'
-                bat "mvn clean install package"
+                sh "mvn clean install package"
             }
         }    
     }
