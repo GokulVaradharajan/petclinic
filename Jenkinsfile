@@ -1,11 +1,11 @@
 node {
-    def mvnHome = tool name: 'Maven 3.8.6', type: 'maven'
+    def mvnHome = tool name: 'M3', type: 'maven'
     def mvnCli = "${mvnHome}/bin/mvn"
     
     properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')),
         disableConcurrentBuilds(),
-        [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/gouthamchilakala/PetClinic.git/'],
+        [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/GokulVaradharajan/PetClinic.git/'],
         [$class: 'ThrottleJobProperty', categories: [], limitOneJobWithMatchingParams: false, maxConcurrentPerNode: 0, maxConcurrentTotal: 0, paramsToUseForLimit: '', throttleEnabled: true, throttleOption: 'project'],
         pipelineTriggers([githubPush()]),
         parameters([string(defaultValue: 'DEV', description: 'env name', name: 'environment', trim: false)])
@@ -18,7 +18,7 @@ node {
         echo "$JENKINS_URL"
     }
     stage('maven compile'){
-        // def mvnHome = tool name: 'Maven 3.8.6', type: 'maven'
+        // def mvnHome = tool name: 'M3', type: 'maven'
         // def mvnCli = "${mvnHome}/bin/mvn"
         sh "${mvnCli} clean compile"
     }
