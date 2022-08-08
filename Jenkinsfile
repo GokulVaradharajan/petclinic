@@ -5,9 +5,6 @@ node {
     properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')),
         disableConcurrentBuilds(),
-        [$class: 'GithubProjectProperty', displayName: '', projectUrlStr: 'https://github.com/GokulVaradharajan/PetClinic.git/'],
-        [$class: 'ThrottleJobProperty', categories: [], limitOneJobWithMatchingParams: false, maxConcurrentPerNode: 0, maxConcurrentTotal: 0, paramsToUseForLimit: '', throttleEnabled: true, throttleOption: 'project'],
-        pipelineTriggers([githubPush()]),
         parameters([string(defaultValue: 'DEV', description: 'env name', name: 'environment', trim: false)])
     ])
     stage('Checkout SCM'){
